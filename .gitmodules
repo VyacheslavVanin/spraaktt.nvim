@@ -1,0 +1,3 @@
+[submodule "spraaktt"]
+	path = spraaktt
+	url = git@github.com:VyacheslavVanin/spraaktt.git
