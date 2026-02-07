@@ -10,19 +10,27 @@ local function get_spraaktt_dir()
   -- Get the path to this file and derive the spraaktt directory
   local current_file = debug.getinfo(1).source:match("@?(.*)")
   local current_dir = current_file:match("(.*/)"):gsub("/[^/]+/$", "/")
-  return current_dir .. "../spraaktt/"
+  return current_dir .. "spraaktt/"
+end
+
+-- Insert lines in current cursor position
+local function insert_lines(lines)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local current_line = cursor[1] - 1
+    local current_col = cursor[2]
+
+    local current_line = vim.api.nvim_get_current_line()
+    local after = #current_line == current_col + 1
+    vim.api.nvim_put(lines, 'c', after, true)
 end
 
 -- Function to start the spraaktt process (called during setup)
 M.start_process = function()
-  if spraaktt_job and vim.fn.jobstatus(spraaktt_job) == "run" then
+  if spraaktt_job ~= nil then
     print("Spraaktt process is already running")
     return
   end
 
-  -- Clear previous output
-  output_lines = {}
-  
   local spraaktt_dir = get_spraaktt_dir()
   
   -- Check if uv is available
@@ -42,16 +50,10 @@ M.start_process = function()
       if data and #data > 0 then
         for _, line in ipairs(data) do
           if line and line ~= "" then
-            -- Check if this is a transcription result (not a command prompt)
-            if not string.match(line, "Server started") and not string.match(line, "Enter command") then
-              table.insert(output_lines, line)
-              
               -- Update the current buffer with the new output
               vim.schedule(function()
-                local bufnr = vim.api.nvim_get_current_buf()
-                vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {line})
+                insert_lines({line})
               end)
-            end
           end
         end
       end
@@ -79,28 +81,28 @@ M.start_process = function()
   end
 end
 
--- Function to send startc command to the spraaktt process
+-- Function to send start command to the spraaktt process
 M.start = function()
-  if not spraaktt_job or vim.fn.jobstatus(spraaktt_job) ~= "run" then
+  if not spraaktt_job then
     print("Spraaktt process is not running. Please restart Neovim or reload the plugin.")
     return
   end
 
-  -- Send the startc command to begin continuous transcription
-  vim.fn.chansend(spraaktt_job, "startc\n")
+  -- Send the startc command to begin transcription
+  vim.fn.chansend(spraaktt_job, "start\n")
   is_running = true
-  print("Spraaktt continuous transcription started")
+  print("Spraaktt transcription started")
 end
 
 -- Function to send stopc command to the spraaktt process
 M.stop = function()
-  if not spraaktt_job or vim.fn.jobstatus(spraaktt_job) ~= "run" then
+  if not spraaktt_job then
     print("Spraaktt process is not running")
     return
   end
 
-  -- Send 'stopc' command to stop continuous transcription
-  vim.fn.chansend(spraaktt_job, "stopc\n")
+  -- Send 'stop' command to stop transcription
+  vim.fn.chansend(spraaktt_job, "stop\n")
   is_running = false
   print("Spraaktt stopped")
 end
