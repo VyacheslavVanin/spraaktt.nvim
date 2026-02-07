@@ -16,5 +16,13 @@ vim.api.nvim_create_user_command('SpraakttStop', function()
   spraaktt.stop()
 end, {})
 
+vim.api.nvim_create_user_command('SpraakttToggle', function()
+  if spraaktt.is_running then
+    spraaktt.stop()
+  else
+    spraaktt.start()
+  end
+end, {})
+
 -- Store the module reference for later use if needed
 _G.spraaktt = spraaktt

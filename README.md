@@ -32,6 +32,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 - `:SpraakttStart` - Starts speech transcription
 - `:SpraakttStop` - Stops the speech transcription
+- `:SpraakttToggle` - Starts speech transcription if it is not already running, otherwise stops it
 
 ## Usage
 

@@ -2,7 +2,7 @@ local M = {}
 
 -- Variable to store the job handle for the spraaktt process
 local spraaktt_job = nil
-local is_running = false
+M.is_running = false
 local output_lines = {}
 
 -- Helper function to get the spraaktt directory path
@@ -68,7 +68,7 @@ M.start_process = function()
       end
     end,
     on_exit = function(chan_id, code, event)
-      is_running = false
+      M.is_running = false
       spraaktt_job = nil
       print("Spraaktt process exited with code: " .. (code or "unknown"))
     end
@@ -90,7 +90,7 @@ M.start = function()
 
   -- Send the startc command to begin transcription
   vim.fn.chansend(spraaktt_job, "start\n")
-  is_running = true
+  M.is_running = true
   print("Spraaktt transcription started")
 end
 
@@ -103,7 +103,7 @@ M.stop = function()
 
   -- Send 'stop' command to stop transcription
   vim.fn.chansend(spraaktt_job, "stop\n")
-  is_running = false
+  M.is_running = false
   print("Spraaktt stopped")
 end
 
