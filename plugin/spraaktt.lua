@@ -4,8 +4,8 @@
 
 local spraaktt = require('spraaktt')
 
--- Initialize the plugin - starts the spraaktt process
-spraaktt.setup()
+---- Initialize the plugin - starts the spraaktt process
+--spraaktt.setup()
 
 -- Define the commands
 vim.api.nvim_create_user_command('SpraakttStart', function()
@@ -26,6 +26,10 @@ end, {})
 
 vim.api.nvim_create_user_command('SpraakttErrorLog', function()
   spraaktt.show_error_log()
+end, {})
+
+vim.api.nvim_create_user_command('SpraakttUnload', function()
+  spraaktt.unload()
 end, {})
 
 -- Store the module reference for later use if needed

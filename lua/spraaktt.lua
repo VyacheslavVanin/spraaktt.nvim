@@ -37,16 +37,16 @@ local function truncate_file(filename)
 end
 
 -- Function to start the spraaktt process (called during setup)
-M.start_process = function()
+M.start_process = function(opts)
   if spraaktt_job ~= nil then
     return
   end
 
   local spraaktt_dir = get_spraaktt_dir()
-  
+
   -- Check if uv is available
   local has_uv = vim.fn.executable('uv') == 1
-  
+
   -- Start the spraaktt process (without sending startc command yet)
   local command
   if has_uv then
@@ -55,8 +55,14 @@ M.start_process = function()
     command = {"python", "main.py"}
   end
   vim.list_extend(command, {"--stderr-file", error_file})
-  truncate_file(error_file)
+
+  -- Add idle-unload-time if provided in options
+  if opts and opts.idle_unload_time then
+    vim.list_extend(command, {"--idle-unload-time", tostring(opts.idle_unload_time)})
+  end
   
+  truncate_file(error_file)
+
   spraaktt_job = vim.fn.jobstart(command, {
     cwd = spraaktt_dir,
     on_stdout = function(chan_id, data, event)
@@ -125,7 +131,19 @@ end
 -- Function to start the spraaktt process automatically when the plugin loads
 M.setup = function(opts)
   opts = opts or {}
-  M.start_process()
+  M.start_process(opts)
+end
+
+-- Function to send unload command to the spraaktt process
+M.unload = function()
+  if not spraaktt_job then
+    print("Spraaktt process is not running")
+    return
+  end
+
+  -- Send 'unload' command to unload the model from memory
+  vim.fn.chansend(spraaktt_job, "unload\n")
+  print("Spraaktt model unloaded from memory")
 end
 
 M.show_error_log = function()
