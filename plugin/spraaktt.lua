@@ -24,5 +24,9 @@ vim.api.nvim_create_user_command('SpraakttToggle', function()
   end
 end, {})
 
+vim.api.nvim_create_user_command('SpraakttErrorLog', function()
+  spraaktt.show_error_log()
+end, {})
+
 -- Store the module reference for later use if needed
 _G.spraaktt = spraaktt

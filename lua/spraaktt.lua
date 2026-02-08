@@ -1,5 +1,7 @@
 local M = {}
 
+local error_file = "/tmp/spraaktt.err"
+
 -- Variable to store the job handle for the spraaktt process
 local spraaktt_job = nil
 M.is_running = false
@@ -24,10 +26,19 @@ local function insert_lines(lines)
     vim.api.nvim_put(lines, 'c', after, true)
 end
 
+local function truncate_file(filename)
+  local err_file = io.open(filename, "w")
+  if err_file then
+    err_file:write("")
+    err_file:close()
+  else
+    print("Failed to open " .. filename " for writing")
+  end
+end
+
 -- Function to start the spraaktt process (called during setup)
 M.start_process = function()
   if spraaktt_job ~= nil then
-    print("Spraaktt process is already running")
     return
   end
 
@@ -43,6 +54,8 @@ M.start_process = function()
   else
     command = {"python", "main.py"}
   end
+  vim.list_extend(command, {"--stderr-file", error_file})
+  truncate_file(error_file)
   
   spraaktt_job = vim.fn.jobstart(command, {
     cwd = spraaktt_dir,
@@ -62,7 +75,10 @@ M.start_process = function()
       if data and #data > 0 then
         for _, line in ipairs(data) do
           if line and line ~= "" then
-            print("Spraaktt Error: " .. line)
+            -- if line not started with "Enter command"
+            if not line:match("^Enter command") then
+                print("Spraaktt Error: " .. line)
+            end
           end
         end
       end
@@ -70,7 +86,6 @@ M.start_process = function()
     on_exit = function(chan_id, code, event)
       M.is_running = false
       spraaktt_job = nil
-      print("Spraaktt process exited with code: " .. (code or "unknown"))
     end
   })
 
@@ -111,6 +126,22 @@ end
 M.setup = function(opts)
   opts = opts or {}
   M.start_process()
+end
+
+M.show_error_log = function()
+  if spraaktt_job ~= nil then
+    local err_file = io.open(error_file, "r")
+    if err_file then
+      local content = err_file:read("*all")
+      err_file:close()
+      print("Spraaktt Error Log:")
+      print(content)
+    else
+      print("Failed to open " .. error_file .. " for reading")
+    end
+  else
+    print("Spraaktt process is not running")
+  end
 end
 
 return M
